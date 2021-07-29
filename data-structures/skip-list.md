@@ -2,7 +2,7 @@
 
 I learned about skip lists during "algorithms club" with some friends, but couldn't really put it into context. Then, I encountered it again recently through [Bradfield](https://bradfieldcs.com), as part of our study of [LevelDB](https://github.com/google/leveldb/blob/f57513a1d6c99636fc5b710150d0b93713af4e43/db/skiplist.h#L42).
 
-LevelDB uses a skiplist as its "memtable", which means that as new reads and writes come in, LevelDB will use a skip list in-memory to respond to queries. If the skip list fills up
+LevelDB uses a skiplist as its "memtable", which means that as new reads and writes come in, LevelDB will use a skip list in-memory to respond to queries. If the skip list fills up, it'll get flushed to disk (in the form of ["sorted string tables"](https://www.igvita.com/2012/02/06/sstable-and-log-structured-storage-leveldb/), or `.sst` files...also super cool!).
 
 ## Definition
 
@@ -40,7 +40,7 @@ As we add nodes, we essentially toss a coin to establish the assigned level for 
 
 When we want to retrieve a node, we're able to search from the topmost level down, using something that's likely to be akin to binary search. Of course, because the levels are assigned randomly, we may not get the exact behavior of a balanced tree search...but we also don't have the overhead of maintaining the balance of a tree! We just toss coins and snip new nodes in/out as needed.
 
-### Basica Go implementation
+### Basic Go implementation
 
 ```go
 package main
@@ -106,12 +106,14 @@ func maybeMatch(prev [maxLevels]*skipListOCNode, key string) *skipListOCNode {
 
 func randomLevel() int {
 	result := 1
+        // here is our "coin toss"
 	for result < maxLevels && rand.Intn(branching) == 0 {
 		result++
 	}
 	return result
 }
 
+// Get should retrieve the value for a given key, if it exists
 func (o *skipListOC) Get(key string) (string, bool) {
 	prev := o.findNodesBeforeKeyByLevel(key)
 	if node := maybeMatch(prev, key); node != nil {
@@ -120,6 +122,7 @@ func (o *skipListOC) Get(key string) (string, bool) {
 	return "", false
 }
 
+// Add or update the key with the given value. If the key was newly added, return true; otherwise, mutate the value and return false.
 func (o *skipListOC) Put(key, value string) bool {
 	prev := o.findNodesBeforeKeyByLevel(key)
 	if node := maybeMatch(prev, key); node != nil {
@@ -131,6 +134,7 @@ func (o *skipListOC) Put(key, value string) bool {
 			item:  Item{Key: key, Value: value},
 			level: level,
 		}
+                // it's possible we've soared to new heights!
 		if level > o.levels {
 			for i := level - 1; i >= o.levels; i-- {
 				o.head.next[i] = node
@@ -150,6 +154,7 @@ func (o *skipListOC) Put(key, value string) bool {
 	}
 }
 
+// Deleting should snip the key out, if it exists.
 func (o *skipListOC) Delete(key string) bool {
 	prev := o.findNodesBeforeKeyByLevel(key)
 	if node := maybeMatch(prev, key); node != nil {
@@ -162,6 +167,7 @@ func (o *skipListOC) Delete(key string) bool {
 	}
 }
 
+// LevelDB supports "seeks" on continuous keys, so we do too!
 func (o *skipListOC) RangeScan(startKey, endKey string) Iterator {
 	prev := o.findNodesBeforeKeyByLevel(startKey)
 	node := prev[0].next[0]
