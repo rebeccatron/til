@@ -4,7 +4,7 @@ Since I got started as a software engineer in 2015, I have learned a LOT. Every 
 
 ...the thing is, I'm not always so great at capturing my own learning and putting it *somewhere* I can easily share or refer to later.
 
-So, I'm giving this a whirl! Inspired by [Simon Willison's](https://til.simonwillison.net) TILs, which in turn is inspired by [Josh Branchaud's TILs](https://github.com/jbranchaud/til), described as:
+So, I'm giving this a whirl! Inspired by [Simon Willison's TILs](https://til.simonwillison.net), which in turn were inspired by [Josh Branchaud's TILs](https://github.com/jbranchaud/til), described as:
 
 > A collection of concise write-ups on small things I learn day to day across a variety of languages and technologies. These are things that don't really warrant a full blog post.
 
